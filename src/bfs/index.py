@@ -37,6 +37,8 @@ class ReguaPuzzle:
                 if tuple(sucessor) not in visitados:
                     fila.append((sucessor, custo + custo_mov, caminho + [estado]))
 
+    
+
 
 # Exemplo de uso:
 n = 2

@@ -1,65 +1,91 @@
-from priority_queue import PriorityQueue
+from star_algorithm.priority_queue import PriorityQueue
 
-size = 2
-start = ['B', 'A', 'B', 'A', '']
-goal =['B', 'B', '', 'A', 'A']
+class StarAlgorithm:
+  def __init__(self, start: list, goal: list, size: int):
+    self.start = tuple(start)
+    self.goal = tuple(goal)
+    self.size = size
 
-def moviment_cost(state, neighbor):
-  return abs(state.index('') - neighbor.index(''))
+  def moviment_cost(self, state: tuple, neighbor: tuple):
+    return abs(state.index('') - neighbor.index(''))
 
-def get_neighbors(state):
-  empty_postion = state.index('')
-  neighbors = []
+  def get_neighbors(self, state: tuple):
+    empty_position = state.index('')
+    neighbors = []
 
-  for distance in range(1, size + 1):
-    if 0 < empty_postion + distance < len(state):
-      neighbor = state[:]
-      neighbor[empty_postion], neighbor[empty_postion + distance] = neighbor[empty_postion + distance], neighbor[empty_postion]
-      neighbors.append(neighbor)
+    for distance in range(1, self.size + 1):
+      if 0 <= empty_position + distance < len(state):
+        neighbor = list(state)
+        neighbor[empty_position], neighbor[empty_position + distance] = neighbor[empty_position + distance], neighbor[empty_position]
+        neighbors.append(tuple(neighbor))
 
-    if 0 < empty_postion - distance < len(state):
-      neighbor = state[:]
-      neighbor[empty_postion], neighbor[empty_postion - distance] = neighbor[empty_postion - distance], neighbor[empty_postion]
-      neighbors.append(neighbor)
+      if 0 <= empty_position - distance < len(state):
+        neighbor = list(state)
+        neighbor[empty_position], neighbor[empty_position - distance] = neighbor[empty_position - distance], neighbor[empty_position]
+        neighbors.append(tuple(neighbor))
 
-  return neighbors
+    return neighbors
 
-def heuristic(state):
-  return sum(1 for a, b in zip(state, goal) if a != b)
+  def first_heuristic(self, state: tuple):
+    return sum(1 for a, b in zip(state, self.goal) if a != b)
 
-def other_heuristic(state):
-  return sum(abs(state.index(item) - goal.index(item)) for item in state if item != '')
+  def second_heuristic(self, state: tuple):
+    goal_positions = { value: index for index, value in enumerate(self.goal) }
+    return sum(
+      abs(index - goal_positions[item]) for index, item in enumerate(state) if item != ''
+    )
 
-def star_algorithm():
-  possibilities: PriorityQueue = PriorityQueue()
-  possibilities.insert(0, start)
+  def build_path(self, predecessors: dict, end_state: tuple):
+    path = []
+    current = end_state
 
-  g_costs = { str(start): 0 }
+    while current in predecessors:
+      path.append(list(current))
+      current = predecessors[current]
 
-  path = {}
+    path.append(list(self.start))
+    path.reverse()
 
-  while not possibilities.empty():
-    _, state = possibilities.remove()
+    print("Solução:")
+    print(*path, sep="\n")
 
-    if state == goal:
-      return path
+    print(f'Passos: {len(path)}')
 
-    for neighbor in get_neighbors(state):
-      calculated_g_cost = g_costs[str(state)] + moviment_cost(state, neighbor)
+  def run(self):
+    possibilities = PriorityQueue()
+    possibilities.insert(0, self.start)
 
-      if str(neighbor) not in g_costs or calculated_g_cost < g_costs[str(neighbor)]:
-        g_costs[str(neighbor)] = calculated_g_cost
-        f_cost = calculated_g_cost + heuristic(neighbor)
+    g_costs = { self.start: 0 }
+    predecessors = {}
 
-        possibilities.insert(f_cost, neighbor)
-        path[str(neighbor)] = state
+    branches = 0
+    max_memory = 0
+    nodes_expanded = 0
 
-  return None
+    while not possibilities.empty():
+      max_memory = max(max_memory, len(possibilities.queue))
 
-path = star_algorithm()
-if path:
-  print('Solução:')
-  for moviment in path:
-    print(moviment)
-else:
-  print('Não foi possível encontrar um final para o algoritmo!')
+      _, state = possibilities.remove()
+      nodes_expanded += 1
+
+      if state == self.goal:
+        self.build_path(predecessors, state)
+        print(f'Nós expandidos: {nodes_expanded}')
+        print(f'Máxima memória utilizada: {max_memory}')
+        print(f'Fator de ramificação média: {
+          branches / nodes_expanded if nodes_expanded > 0 else 0
+        }')
+        return
+
+      for neighbor in self.get_neighbors(state):
+        branches += 1
+        calculated_g_cost = g_costs[state] + self.moviment_cost(state, neighbor)
+
+        if neighbor not in g_costs or calculated_g_cost < g_costs[neighbor]:
+          g_costs[neighbor] = calculated_g_cost
+          f_cost = calculated_g_cost + self.first_heuristic(neighbor)
+
+          possibilities.insert(f_cost, neighbor)
+          predecessors[neighbor] = state
+
+    print("Não foi possível encontrar um final para o algoritmo!")

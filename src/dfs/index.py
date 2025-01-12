@@ -12,7 +12,7 @@ def gerador_de_estado_inicial(N):
 def gerador_de_sucessores(estado, N):
     sucessores = []
     pos_vazio = estado.index('-')
-    
+
     for i in range(len(estado)):
         if abs(pos_vazio - i) <= N and estado[i] != '-':
             novo_estado = estado.copy()
@@ -35,10 +35,10 @@ def busca_limitada(estado, limite, N, nos_expandidos, memoria_maxima):
 
     if verificar_objetivo(estado):
         return [estado]
-    
+
     if limite == 0:
         return None
-    
+
     for sucessor in gerador_de_sucessores(estado, N):
         resultado = busca_limitada(sucessor, limite - 1, N, nos_expandidos, memoria_maxima)
         if resultado:
@@ -54,8 +54,8 @@ def iddfs(estado_inicial, profundidade_maxima, N):
             return resultado, nos_expandidos[0], memoria_maxima[0]
     return None, nos_expandidos[0], memoria_maxima[0]
 
-def main():     
-    N = 2
+def main():
+    N = 10
     estado_inicial = gerador_de_estado_inicial(N)
     profundidade_maxima = 10
 
