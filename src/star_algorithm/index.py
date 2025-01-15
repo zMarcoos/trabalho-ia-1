@@ -1,13 +1,11 @@
-from util.priority_queue import PriorityQueue
-
 class StarAlgorithm:
-  def __init__(self, start: list, goal: list, size: int):
-    self.start = tuple(start)
-    self.goal = tuple(goal)
+  def __init__(self, start: tuple, goal: tuple, size: int):
+    self.start = start
+    self.goal = goal
     self.size = size
 
-  def moviment_cost(self, state: tuple, neighbor: tuple):
-    return abs(state.index('') - neighbor.index(''))
+  def h(self, from_state: tuple, to_state: tuple):
+    return abs(from_state.index('') - to_state.index(''))
 
   def get_neighbors(self, state: tuple):
     empty_position = state.index('')
@@ -16,24 +14,21 @@ class StarAlgorithm:
     for distance in range(1, self.size + 1):
       if 0 <= empty_position + distance < len(state):
         neighbor = list(state)
-        neighbor[empty_position], neighbor[empty_position + distance] = neighbor[empty_position + distance], neighbor[empty_position]
+        neighbor[empty_position], neighbor[empty_position + distance] = (
+          neighbor[empty_position + distance],
+          neighbor[empty_position],
+        )
         neighbors.append(tuple(neighbor))
 
       if 0 <= empty_position - distance < len(state):
         neighbor = list(state)
-        neighbor[empty_position], neighbor[empty_position - distance] = neighbor[empty_position - distance], neighbor[empty_position]
+        neighbor[empty_position], neighbor[empty_position - distance] = (
+          neighbor[empty_position - distance],
+          neighbor[empty_position],
+        )
         neighbors.append(tuple(neighbor))
 
     return neighbors
-
-  def first_heuristic(self, state: tuple):
-    return sum(1 for a, b in zip(state, self.goal) if a != b)
-
-  def second_heuristic(self, state: tuple):
-    goal_positions = { value: index for index, value in enumerate(self.goal) }
-    return sum(
-      abs(index - goal_positions[item]) for index, item in enumerate(state) if item != ''
-    )
 
   def build_path(self, predecessors: dict, end_state: tuple):
     path = []
@@ -52,40 +47,61 @@ class StarAlgorithm:
     print(f'Passos: {len(path)}')
 
   def run(self):
-    possibilities = PriorityQueue()
-    possibilities.insert(0, self.start)
+    begin_g = 0
+    begin_h = self.h(self.start, self.goal)
 
-    g_costs = { self.start: 0 }
+    open_list = {
+      self.start: {
+        'parent': None,
+        'g': begin_g,
+        'h': begin_h,
+        'f': begin_g + begin_h
+      },
+    }
+
+    closed_list = {}
     predecessors = {}
 
     branches = 0
     max_memory = 0
     nodes_expanded = 0
 
-    while not possibilities.empty():
-      max_memory = max(max_memory, len(possibilities.queue))
+    while len(open_list) != 0:
+      max_memory = max(max_memory, len(open_list))
+      least_node = min(open_list.items(), key=lambda x: x[1]['f'])
 
-      _, state = possibilities.remove()
-      nodes_expanded += 1
-
-      if state == self.goal:
-        self.build_path(predecessors, state)
+      if least_node[0] == self.goal:
         print(f'Nós expandidos: {nodes_expanded}')
         print(f'Máxima memória utilizada: {max_memory}')
         print(f'Fator de ramificação média: {
           branches / nodes_expanded if nodes_expanded > 0 else 0
         }')
+
+        self.build_path(predecessors, least_node[0])
         return
 
-      for neighbor in self.get_neighbors(state):
+      nodes_expanded += 1
+
+      open_list.pop(least_node[0])
+      closed_list[least_node[0]] = least_node[1]
+
+      for neighbor in self.get_neighbors(least_node[0]):
         branches += 1
-        calculated_g_cost = g_costs[state] + self.moviment_cost(state, neighbor)
 
-        if neighbor not in g_costs or calculated_g_cost < g_costs[neighbor]:
-          g_costs[neighbor] = calculated_g_cost
-          f_cost = calculated_g_cost + self.first_heuristic(neighbor)
+        if neighbor in closed_list: continue
 
-          possibilities.insert(f_cost, neighbor)
-          predecessors[neighbor] = state
+        calculated_g = least_node[1]['g'] + 1
+        if neighbor in open_list:
+          if calculated_g >= open_list[neighbor]['g']: continue
 
-    print("Não foi possível encontrar um final para o algoritmo!")
+        h = self.h(neighbor, self.goal)
+        open_list[neighbor] = {
+          'parent': least_node[0],
+          'g': calculated_g,
+          'h': h,
+          'f': calculated_g + h
+        }
+
+        predecessors[neighbor] = least_node[0]
+
+    print('Sem solução!')
