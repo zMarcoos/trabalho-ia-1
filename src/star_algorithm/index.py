@@ -1,4 +1,4 @@
-from star_algorithm.priority_queue import PriorityQueue
+from util.priority_queue import PriorityQueue
 
 class StarAlgorithm:
   def __init__(self, start: list, goal: list, size: int):
