@@ -7,6 +7,9 @@ class StarAlgorithm:
   def h(self, from_state: tuple, to_state: tuple):
     return abs(from_state.index('') - to_state.index(''))
 
+  def h2(self, state: tuple):
+    return sum(1 for a, b in zip(state, self.goal) if a != b)
+
   def get_neighbors(self, state: tuple):
     empty_position = state.index('')
     neighbors = []
@@ -48,7 +51,7 @@ class StarAlgorithm:
 
   def run(self):
     begin_g = 0
-    begin_h = self.h(self.start, self.goal)
+    begin_h = self.h2(self.start)
 
     open_list = {
       self.start: {
@@ -94,7 +97,7 @@ class StarAlgorithm:
         if neighbor in open_list:
           if calculated_g >= open_list[neighbor]['g']: continue
 
-        h = self.h(neighbor, self.goal)
+        h = self.h2(neighbor)
         open_list[neighbor] = {
           'parent': least_node[0],
           'g': calculated_g,

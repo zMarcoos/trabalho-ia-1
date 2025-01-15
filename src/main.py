@@ -3,7 +3,7 @@ from random import shuffle
 from star_algorithm.index import StarAlgorithm
 
 def create_problem(size: int):
-  sequence = f'{'A,' * size}{'B,' * size}'
+  sequence = f'{'B,' * size}{'A,' * size}'
   return sequence.split(',')
 
 size = 7
