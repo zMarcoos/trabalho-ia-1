@@ -1,11 +1,14 @@
-class StarAlgorithm:
+from collections import deque
+import heapq
+
+class ReguaPuzzle:
   def __init__(self, start: tuple, goal: tuple, size: int):
     self.start = start
     self.goal = goal
     self.size = size
 
-  def h(self, from_state: tuple, to_state: tuple):
-    return abs(from_state.index('') - to_state.index(''))
+  def h(self, state: tuple):
+    return abs(state.index('') - self.goal.index(''))
 
   def h2(self, state: tuple):
     return sum(1 for a, b in zip(state, self.goal) if a != b)
@@ -34,77 +37,60 @@ class StarAlgorithm:
     return neighbors
 
   def build_path(self, predecessors: dict, end_state: tuple):
-    path = []
+    path = deque()
     current = end_state
 
     while current in predecessors:
-      path.append(list(current))
+      path.appendleft(list(current))
       current = predecessors[current]
 
-    path.append(list(self.start))
-    path.reverse()
+    path.appendleft(list(self.start))
 
-    print("Solução:")
-    print(*path, sep="\n")
+    print("\nSolução encontrada:")
+    for step, state in enumerate(path):
+      print(f"Passo {step + 1}: {state}")
 
-    print(f'Passos: {len(path)}')
+    print(f'\nTotal de passos: {len(path) - 1}')
 
   def run(self):
-    begin_g = 0
-    begin_h = self.h2(self.start)
+    open_list = []
+    heapq.heappush(open_list, (0, self.start))
 
-    open_list = {
-      self.start: {
-        'parent': None,
-        'g': begin_g,
-        'h': begin_h,
-        'f': begin_g + begin_h
-      },
-    }
-
-    closed_list = {}
+    g_scores = {self.start: 0}
     predecessors = {}
 
+    closed_list = set()
     branches = 0
     max_memory = 0
     nodes_expanded = 0
 
-    while len(open_list) != 0:
+    while open_list:
       max_memory = max(max_memory, len(open_list))
-      least_node = min(open_list.items(), key=lambda x: x[1]['f'])
+      _, current = heapq.heappop(open_list)
 
-      if least_node[0] == self.goal:
-        print(f'Nós expandidos: {nodes_expanded}')
+      if current == self.goal:
+        print(f'\nNós expandidos: {nodes_expanded}')
         print(f'Máxima memória utilizada: {max_memory}')
         print(f'Fator de ramificação média: {
-          branches / nodes_expanded if nodes_expanded > 0 else 0
+          branches / nodes_expanded if nodes_expanded > 0 else 0:.2f
         }')
 
-        self.build_path(predecessors, least_node[0])
+        self.build_path(predecessors, current)
         return
 
       nodes_expanded += 1
+      closed_list.add(current)
 
-      open_list.pop(least_node[0])
-      closed_list[least_node[0]] = least_node[1]
-
-      for neighbor in self.get_neighbors(least_node[0]):
+      for neighbor in self.get_neighbors(current):
         branches += 1
-
         if neighbor in closed_list: continue
 
-        calculated_g = least_node[1]['g'] + 1
-        if neighbor in open_list:
-          if calculated_g >= open_list[neighbor]['g']: continue
+        g = g_scores[current] + 1
+        if neighbor not in g_scores or g < g_scores[neighbor]:
+          g_scores[neighbor] = g
+          f = g + self.h2(neighbor)
 
-        h = self.h2(neighbor)
-        open_list[neighbor] = {
-          'parent': least_node[0],
-          'g': calculated_g,
-          'h': h,
-          'f': calculated_g + h
-        }
+          heapq.heappush(open_list, (f, neighbor))
+          predecessors[neighbor] = current
 
-        predecessors[neighbor] = least_node[0]
-
-    print('Sem solução!')
+    print("\nNenhuma solução encontrada!")

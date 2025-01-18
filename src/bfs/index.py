@@ -13,15 +13,16 @@ class ReguaPuzzle:
     for deslocamento in range(-self.tamanho, self.tamanho + 1):
       i = vazio + deslocamento
       if 0 <= i < len(estado) and estado[i] != "":
-        novo_estado = estado.copy()
+        novo_estado = estado[:]
         novo_estado[vazio], novo_estado[i] = novo_estado[i], novo_estado[vazio]
-        custo_movimento = abs(deslocamento)
-        sucessores.append((novo_estado, custo_movimento))
+
+        if novo_estado != estado:
+          sucessores.append((novo_estado, abs(deslocamento)))
 
     return sucessores
 
   def verificar_objetivo(self, estado):
-    return [x for x in estado if x != ""] == self.meta[:-1]
+    return estado == self.meta
 
   def run(self):
     fila = deque([(self.inicio, 0, [])])
@@ -41,8 +42,8 @@ class ReguaPuzzle:
 
         print("\nSolução encontrada:")
 
-        for index, estado in enumerate(caminho):
-          print(f"Passo {index + 1}: {estado}")
+        for indice, estado in enumerate(caminho):
+          print(f"Passo {indice + 1}: {estado}")
 
         print(f'Quantidade de passos: {len(caminho) + 1}')
         print(f"Custo total: {custo}")

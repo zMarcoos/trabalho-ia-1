@@ -1,13 +1,14 @@
 import time
 from random import shuffle
-from star_algorithm.index import StarAlgorithm
-from bfs.index import ReguaPuzzle
+from star_algorithm.index import ReguaPuzzle
+#from bfs.index import ReguaPuzzle
+#from dfs.index import ReguaPuzzle
 
 def create_problem(size: int):
   sequence = f'{'B,' * size}{'A,' * size}'
   return sequence.split(',')
 
-size = 9
+size = 10
 goal = create_problem(size)
 start = goal.copy()
 shuffle(start)
@@ -15,7 +16,10 @@ shuffle(start)
 start_time = time.perf_counter()
 
 '''
-algorithm = StarAlgorithm(tuple(start), tuple(goal), size)
+algorithm = ReguaPuzzle(tuple(start), tuple(goal), size)
+algorithm.run()
+
+algorithm = ReguaPuzzle(start, goal, size)
 algorithm.run()
 
 algorithm = ReguaPuzzle(start, goal, size)
